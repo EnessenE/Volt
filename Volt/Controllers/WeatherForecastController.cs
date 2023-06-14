@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Volt.Models;
 
 namespace Volt.Controllers
 {

@@ -1,4 +1,4 @@
-namespace Volt
+namespace Volt.Models
 {
     public class WeatherForecast
     {

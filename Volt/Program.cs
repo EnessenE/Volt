@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace Volt
 {
     public class Program
@@ -5,6 +7,13 @@ namespace Volt
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console().ReadFrom.Configuration(builder.Configuration)
+                .CreateLogger();
+
+            builder.Logging.ClearProviders();
+            builder.Host.UseSerilog();
 
             // Add services to the container.
 
