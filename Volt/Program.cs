@@ -1,4 +1,7 @@
 using Serilog;
+using Volt.Contexts;
+using Volt.Hubs;
+using Volt.Interfaces;
 
 namespace Volt
 {
@@ -22,6 +25,11 @@ namespace Volt
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddSingleton<IAccountContext, AccountContext>();
+            builder.Services.AddSingleton<IChatContext, ChatContext>();
+
+            builder.Services.AddSignalR();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -30,6 +38,14 @@ namespace Volt
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromMinutes(2)
+            };
+
+            app.MapHub<ChatHub>("/chat");
+            app.UseWebSockets(webSocketOptions);
 
             app.UseHttpsRedirection();
 
