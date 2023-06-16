@@ -23,6 +23,7 @@ namespace Volt.Hubs
             message.Receiver = acc2;
             message.Sender = acc1;
             message.Created = DateTime.UtcNow;
+            message.LastUpdated = null;
             await _chatContext.Save(message);
             await Task.Run(async () => await NotifyAllParties(message));
         }
