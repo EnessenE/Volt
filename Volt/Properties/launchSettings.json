@@ -10,6 +10,16 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:7263;http://localhost:5289"
     },
+    "Volt - NoBrowser": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7263;http://localhost:5289"
+    },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,

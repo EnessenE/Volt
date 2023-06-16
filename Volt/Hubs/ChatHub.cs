@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System;
 using Volt.Interfaces;
 using Volt.Models;
 
@@ -23,15 +24,22 @@ namespace Volt.Hubs
             message.Sender = acc1;
             message.Created = DateTime.UtcNow;
             await _chatContext.Save(message);
+            await Task.Run(async () => await NotifyAllParties(message));
+        }
+
+        private async Task NotifyAllParties(ChatMessage message)
+        {
+            await Clients.Caller.SendAsync("ReceiveChatMessage", message);
+
         }
 
 
-        public async Task GetChat()
+        public async Task<Chat?> GetChat()
         {
             var acc1 = _accountContext.GetAccounts()[0];
             var acc2 = _accountContext.GetAccounts()[1];
             var chat = await _chatContext.GetChat(acc1, acc2);
-            await Clients.Caller.SendAsync("ReceiveChat", chat);
+            return chat;
         }
     }
 }
