@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System;
 using Volt.Interfaces;
 using Volt.Models;
 
