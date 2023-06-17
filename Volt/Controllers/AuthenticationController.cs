@@ -38,7 +38,8 @@ namespace Volt.Controllers
                     Username = user.Username
                 };
                 var token = GenerateToken(loginResult);
-                return Ok(token);
+                loginResult.Token = token;
+                return Ok(loginResult);
             }
             return Forbid();
         }
@@ -57,7 +58,8 @@ namespace Volt.Controllers
             };
 
             var token = GenerateToken(loginResult);
-            return Ok(token);
+            loginResult.Token = token;
+            return Ok(loginResult);
         }
 
         [Authorize]
@@ -93,7 +95,7 @@ namespace Volt.Controllers
         private Account? Authenticate(LoginRequest userLogin)
         {
             var currentUser = _accountContext.GetAccounts().FirstOrDefault(x => x.Username.ToLowerInvariant() ==
-                userLogin.Username.ToLowerInvariant() && x.Password == userLogin.Password);
+                userLogin.Username.ToLowerInvariant() && x.Password == userLogin.EncryptedPassword);
             return currentUser;
         }
     }

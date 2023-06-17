@@ -13,6 +13,8 @@ namespace Volt
     {
         public static void Main(string[] args)
         {
+            var corsName = "volt_sources";
+
             var builder = WebApplication.CreateBuilder(args);
 
             Log.Logger = new LoggerConfiguration()
@@ -26,6 +28,18 @@ namespace Volt
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: corsName,
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:4200",
+                            "https://volt.reasulus.nl")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod(); ;
+                    });
+            });
 
             builder.Services.AddSwaggerGen(c =>
             {
@@ -106,6 +120,7 @@ namespace Volt
 
             app.UseHttpsRedirection();
 
+            app.UseCors(corsName);
             app.UseAuthentication();
             app.UseAuthorization();
 
