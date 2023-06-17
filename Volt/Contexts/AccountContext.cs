@@ -1,9 +1,10 @@
 ﻿using Volt.Interfaces;
 using Volt.Models;
+using Volt.Models.Signup;
 
 namespace Volt.Contexts
 {
-    
+
     public class AccountContext : IAccountContext
     {
         private List<Account> _accounts = new List<Account>()
@@ -32,6 +33,11 @@ namespace Volt.Contexts
         public Account RegisterAccount(SignupRequest signupRequest)
         {
             throw new NotImplementedException();
+        }
+
+        public Account? GetAccount(Guid id)
+        {
+            return _accounts.FirstOrDefault(item => item.Id.Equals(id));
         }
     }
 }

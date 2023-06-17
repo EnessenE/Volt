@@ -1,4 +1,4 @@
-﻿namespace Volt.Models;
+﻿namespace Volt.Models.Signup;
 
 public class SignupRequest
 {

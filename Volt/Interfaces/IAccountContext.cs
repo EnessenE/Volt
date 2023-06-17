@@ -1,4 +1,5 @@
 ﻿using Volt.Models;
+using Volt.Models.Signup;
 
 namespace Volt.Interfaces
 {
@@ -6,5 +7,6 @@ namespace Volt.Interfaces
     {
         List<Account> GetAccounts();
         Account RegisterAccount(SignupRequest signupRequest);
+        Account? GetAccount(Guid id);
     }
 }

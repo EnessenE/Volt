@@ -1,4 +1,4 @@
-﻿namespace Volt.Models;
+﻿namespace Volt.Models.Login;
 
 public class LoginRequest
 {

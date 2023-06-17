@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using Volt.Interfaces;
 using Volt.Models;
 
 namespace Volt.Hubs
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ChatHub : Hub
     {
         private readonly IChatContext _chatContext;
@@ -38,7 +41,7 @@ namespace Volt.Hubs
         {
             var acc1 = _accountContext.GetAccounts()[0];
             var acc2 = _accountContext.GetAccounts()[1];
-            var chat = await _chatContext.GetChat(acc1, acc2);
+            var chat = await _chatContext.GetChat(new List<Account>(){acc1, acc2});
             return chat;
         }
     }

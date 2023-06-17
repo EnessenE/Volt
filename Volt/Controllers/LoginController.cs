@@ -7,12 +7,13 @@ using System.Text;
 using System.Text.Json;
 using Volt.Interfaces;
 using Volt.Models;
+using Volt.Models.Login;
 
 namespace Volt.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class LoginController : Controller
+    [Route("login")]
+    public class LoginController : ExtendedController
     {
         private readonly IAccountContext _accountContext;
         private readonly IConfiguration _config;
@@ -51,7 +52,8 @@ namespace Volt.Controllers
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier,user.Username),
-                new Claim(ClaimTypes.UserData, JsonSerializer.Serialize(user))
+                new Claim(ClaimTypes.UserData,user.Id.ToString()),
+                new Claim(ClaimTypes.Role,"user"),
             };
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
                 _config["Jwt:Audience"],
@@ -63,8 +65,7 @@ namespace Volt.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
 
         }
-
-        //To authenticate user
+        
         private Account Authenticate(LoginRequest userLogin)
         {
             var currentUser = _accountContext.GetAccounts().FirstOrDefault(x => x.Username.ToLowerInvariant() ==

@@ -20,14 +20,13 @@ namespace Volt.Contexts
 
         public async Task Save(ChatMessage chatMessage)
         {
-            var chat = FindChat(chatMessage);
+            var chat = await FindChat(chatMessage);
             if (chat == null)
             {
                 var newChat = new Chat()
                 {
                     Messages = new List<ChatMessage>(),
-                    Sender = chatMessage.Sender,
-                    Receiver = chatMessage.Receiver
+                    Members = new List<Account>() { chatMessage.Sender, chatMessage.Receiver },
                 };
                 _chats.Add(newChat);
                 chat = newChat;
@@ -47,9 +46,9 @@ namespace Volt.Contexts
             return Task.CompletedTask;
         }
 
-        public void Delete(ChatMessage chatMessage)
+        public async Task Delete(ChatMessage chatMessage)
         {
-            var chat = FindChat(chatMessage);
+            var chat = await FindChat(chatMessage);
             if (chat != null)
             {
                 var chatToDelete = FindChatMessage(chatMessage, chat);
@@ -66,9 +65,9 @@ namespace Volt.Contexts
 
         }
 
-        public void Update(ChatMessage chatMessage)
+        public async Task Update(ChatMessage chatMessage)
         {
-            var chat = FindChat(chatMessage);
+            var chat = await FindChat(chatMessage);
             if (chat != null)
             {
                 var chatToUpdate = FindChatMessage(chatMessage, chat);
@@ -84,26 +83,23 @@ namespace Volt.Contexts
             }
         }
 
-        public Task<Chat?> GetChat(Account sender, Account receiver)
+        public Task<Chat?> GetChat(List<Account> members)
         {
-            var chat = FindChat(receiver, sender);
-
-            return Task.FromResult(chat);
-        }
-
-        private Chat? FindChat(ChatMessage chatMessage)
-        {
-            return FindChat(chatMessage.Receiver, chatMessage.Sender);
-        }
-
-        private Chat? FindChat(Account receiver, Account sender)
-        {
-            var chat = _chats.Find(chat => chat.Receiver == receiver && chat.Sender == sender);
-            if (chat == null)
+            var remainingChats = _chats;
+            foreach (var member in members)
             {
-                _logger.LogInformation("Couldn't find chat between {send} > {rec}", sender, receiver);
+                if (remainingChats.Any())
+                {
+                    remainingChats = remainingChats.Where(chat => chat.Members.Where(member => member.Id.Equals(member.Id)) != null).ToList();
+                }
             }
-            return chat;
+
+            return Task.FromResult(remainingChats.FirstOrDefault());
+        }
+
+        private async Task<Chat?> FindChat(ChatMessage chatMessage)
+        {
+            return await GetChat(new List<Account>() { chatMessage.Receiver, chatMessage.Sender });
         }
 
         private ChatMessage? FindChatMessage(ChatMessage chatMessage, Chat chat)
