@@ -35,5 +35,12 @@ namespace Volt.Controllers
                 return Forbid();
             }
         }
+
+        [HttpGet("mine")]
+        public async Task<ActionResult<List<Chat>>> GetChats()
+        {
+            var userGuid = GetCurrentUser().Id;
+            return Ok(await _chatContext.GetUserChats(userGuid));
+        }
     }
 }

@@ -12,11 +12,13 @@ namespace Volt.Hubs
     {
         private readonly IChatContext _chatContext;
         private readonly IAccountContext _accountContext;
+        private ILogger<ChatHub> _logger;
 
-        public ChatHub(IChatContext chatContext, IAccountContext accountContext)
+        public ChatHub(IChatContext chatContext, IAccountContext accountContext, ILogger<ChatHub> logger)
         {
             _chatContext = chatContext;
             _accountContext = accountContext;
+            _logger = logger;
         }
 
         public async Task SendChat(ChatMessage message)
@@ -42,10 +44,29 @@ namespace Volt.Hubs
         {
             var acc1 = _accountContext.GetAccounts()[0];
             var acc2 = _accountContext.GetAccounts()[1];
-            var chat = await _chatContext.GetChat(new List<Account>(){acc1, acc2});
+            var chat = await _chatContext.GetChat(new List<Account>() { acc1, acc2 });
             return chat;
         }
 
+        public Task<List<Account>> SearchUser(string searchText)
+        {
+            _logger.LogInformation("Searching for {name}", searchText);
+            var accounts = new List<Account>();
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                accounts = _accountContext.GetAccounts().Where(account =>
+                    account.Username.Contains(searchText, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            }
+
+            return Task.FromResult(accounts);
+        }
+
+        public Task<Account?> GetUser(Guid id)
+        {
+            _logger.LogInformation("Searching for {name}", id);
+            var account = _accountContext.GetAccount(id);
+            return Task.FromResult(account);
+        }
 
         protected Account GetCurrentUser()
         {

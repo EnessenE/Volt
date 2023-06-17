@@ -82,15 +82,21 @@ namespace Volt.Contexts
         public Task<Chat?> GetChat(List<Account> members)
         {
             var remainingChats = _chats;
-            foreach (var member in members)
+            foreach (var relevantMember in members)
             {
                 if (remainingChats.Any())
                 {
-                    remainingChats = remainingChats.Where(chat => chat.Members.Where(member => member.Id.Equals(member.Id)) != null).ToList();
+                    remainingChats = remainingChats.Where(chat => chat.Members.Where(member => member.Id.Equals(relevantMember.Id)) != null).ToList();
                 }
             }
 
             return Task.FromResult(remainingChats.FirstOrDefault());
+        }
+
+        public Task<List<Chat>> GetUserChats(Guid account)
+        {
+            var foundChats = _chats.Where(chat => chat.Members.Any(member => member.Id == account)).ToList();
+            return Task.FromResult(foundChats);
         }
 
         private async Task<Chat?> FindChat(ChatMessage chatMessage)

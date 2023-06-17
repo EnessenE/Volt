@@ -8,6 +8,7 @@ namespace Volt.Interfaces
         Task Delete(ChatMessage chatMessage);
         Task Update(ChatMessage chatMessage);
         Task<Chat?> GetChat(List<Account> members);
+        Task<List<Chat>> GetUserChats(Guid account);
     }
 
 }
