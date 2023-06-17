@@ -7,25 +7,26 @@ using System.Text;
 using Volt.Interfaces;
 using Volt.Models;
 using Volt.Models.Login;
+using Volt.Models.Signup;
 
 namespace Volt.Controllers
 {
     [ApiController]
-    [Route("login")]
-    public class LoginController : ExtendedController
+    [Route("v1/auth")]
+    public class AuthenticationController : ExtendedController
     {
         private readonly IAccountContext _accountContext;
         private readonly IConfiguration _config;
 
-        public LoginController(IAccountContext accountContext, IConfiguration config)
+        public AuthenticationController(IAccountContext accountContext, IConfiguration config) : base(accountContext)
         {
             _accountContext = accountContext;
             _config = config;
         }
 
         [AllowAnonymous]
-        [HttpPost]
-        public ActionResult Login([FromBody] LoginRequest userLogin)
+        [HttpPost("login")]
+        public ActionResult<LoginResult> Login([FromBody] LoginRequest userLogin)
         {
             var user = Authenticate(userLogin);
             if (user != null)
@@ -34,7 +35,6 @@ namespace Volt.Controllers
                 {
                     Discriminator = user.Discriminator,
                     Id = user.Id,
-                    PrivateKey = "aa",
                     Username = user.Username
                 };
                 var token = GenerateToken(loginResult);
@@ -42,6 +42,31 @@ namespace Volt.Controllers
             }
             return Forbid();
         }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public ActionResult<LoginResult> Register([FromBody] SignupRequest signupRequest)
+        {
+            var account = _accountContext.RegisterAccount(signupRequest);
+
+            var loginResult = new LoginResult()
+            {
+                Discriminator = account.Discriminator,
+                Id = account.Id,
+                Username = account.Username
+            };
+
+            var token = GenerateToken(loginResult);
+            return Ok(token);
+        }
+
+        [Authorize]
+        [HttpGet("users")]
+        public ActionResult<List<Account>> GetAllUsers()
+        {
+            return Ok(_accountContext.GetAccounts());
+        }
+
 
         // To generate token
         private string GenerateToken(LoginResult user)
@@ -64,16 +89,12 @@ namespace Volt.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
 
         }
-        
-        private Account Authenticate(LoginRequest userLogin)
+
+        private Account? Authenticate(LoginRequest userLogin)
         {
             var currentUser = _accountContext.GetAccounts().FirstOrDefault(x => x.Username.ToLowerInvariant() ==
                 userLogin.Username.ToLowerInvariant() && x.Password == userLogin.Password);
-            if (currentUser != null)
-            {
-                return currentUser;
-            }
-            return null;
+            return currentUser;
         }
     }
 }

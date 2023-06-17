@@ -101,7 +101,7 @@ namespace Volt
                 KeepAliveInterval = TimeSpan.FromMinutes(2)
             };
 
-            app.MapHub<ChatHub>("/hubs/chat");
+            app.MapHub<ChatHub>("/hubs/v1/chat");
             app.UseWebSockets(webSocketOptions);
 
             app.UseHttpsRedirection();
