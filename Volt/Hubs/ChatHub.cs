@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using Volt.Interfaces;
 using Volt.Models;
+using System.Reflection;
 
 namespace Volt.Hubs
 {
@@ -12,7 +14,7 @@ namespace Volt.Hubs
     {
         private readonly IChatContext _chatContext;
         private readonly IAccountContext _accountContext;
-        private ILogger<ChatHub> _logger;
+        private readonly ILogger<ChatHub> _logger;
 
         public ChatHub(IChatContext chatContext, IAccountContext accountContext, ILogger<ChatHub> logger)
         {
@@ -21,31 +23,55 @@ namespace Volt.Hubs
             _logger = logger;
         }
 
-        public async Task SendChat(ChatMessage message)
+        public async Task<DirectChat?> SendDirectChat(ChatMessage message)
         {
-            var acc1 = GetCurrentUser();
-            var acc2 = message.Receiver;
-            message.Receiver = acc2;
-            message.Sender = acc1;
-            message.Created = DateTime.UtcNow;
-            message.LastUpdated = null;
-            await _chatContext.Save(message);
-            await Task.Run(async () => await NotifyAllParties(message));
+            var sender = GetCurrentUser();
+            var receiver = _accountContext.GetAccount(message.Receiver.Id);
+
+            var directChat = await _chatContext.GetChat(new List<Account>() { sender, receiver });
+            if (receiver != null)
+            {
+                message.Receiver = receiver;
+                message.Sender = sender;
+                message.Created = DateTime.UtcNow;
+                message.LastUpdated = null;
+
+                if (directChat == null)
+                {
+                    _logger.LogInformation("No direct chat found between {sender} and {receiver}", sender, receiver);
+                    directChat = await _chatContext.Create(new DirectChat()
+                    {
+                        Members = new List<Account>() { message.Receiver, message.Sender }
+                    });
+
+                }
+                message.ChatId = directChat.Id;
+
+                await _chatContext.Save(message);
+
+                //TODO: dont send all chatmessages in this
+                Task.Run(async () => await NotifyAllRelevantParties(directChat, message));
+                return directChat;
+            }
+            else
+            {
+                _logger.LogWarning("Receiver didn't exist: {id}", message.Receiver);
+            }
+
+            return null;
         }
 
-        private async Task NotifyAllParties(ChatMessage message)
+        private async Task NotifyAllRelevantParties(DirectChat directChat, ChatMessage message)
         {
-            await Clients.Caller.SendAsync("ReceiveChatMessage", message);
+            await Clients.All.SendAsync("ReceiveChatMessage", directChat, message);
 
         }
 
 
-        public async Task<Chat?> GetChat()
+        public async Task<DirectChat?> GetChat(Guid userId)
         {
-            var acc1 = _accountContext.GetAccounts()[0];
-            var acc2 = _accountContext.GetAccounts()[1];
-            var chat = await _chatContext.GetChat(new List<Account>() { acc1, acc2 });
-            return chat;
+            var directChat = await _chatContext.GetChat(new List<Account>() { GetCurrentUser(), new Account(){Id = userId} });
+            return directChat;
         }
 
         public Task<List<Account>> SearchUser(string searchText)

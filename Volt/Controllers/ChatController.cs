@@ -21,7 +21,7 @@ namespace Volt.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Chat?>> GetChat([FromQuery] List<Guid> guids)
+        public async Task<ActionResult<DirectChat?>> GetChat([FromQuery] List<Guid> guids)
         {
             var userGuid = GetCurrentUser().Id;
             if (guids.Contains(userGuid))
@@ -37,10 +37,20 @@ namespace Volt.Controllers
         }
 
         [HttpGet("mine")]
-        public async Task<ActionResult<List<Chat>>> GetChats()
+        public async Task<ActionResult<List<DirectChat>>> GetChats()
         {
-            var userGuid = GetCurrentUser().Id;
-            return Ok(await _chatContext.GetUserChats(userGuid));
+            var user = GetCurrentUser();
+
+
+            var chats = await _chatContext.GetUserChats(user.Id);
+
+            foreach (var chat in chats)
+            {
+                chat.Sender = GetCurrentUser();
+                chat.Receiver = chat.Members.First(member => member.Id != user.Id);
+            }
+
+            return chats;
         }
     }
 }

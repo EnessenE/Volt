@@ -1,50 +1,52 @@
-﻿using Volt.Interfaces;
+﻿using System.Reflection;
+using Volt.Interfaces;
 using Volt.Models;
 
 namespace Volt.Contexts
 {
     public class ChatContext : IChatContext
     {
-        private readonly List<Chat> _chats;
+        private readonly List<DirectChat> _chats;
         private readonly ILogger<ChatContext> _logger;
 
         public ChatContext(ILogger<ChatContext> logger)
         {
             _logger = logger;
-            _chats = new List<Chat>();
+            _chats = new List<DirectChat>();
         }
 
-        public async Task Save(ChatMessage chatMessage)
+        public async Task<DirectChat?> Save(ChatMessage chatMessage)
         {
-            var chat = await FindChat(chatMessage);
-            if (chat == null)
-            {
-                var newChat = new Chat()
-                {
-                    Messages = new List<ChatMessage>(),
-                    Members = new List<Account>() { chatMessage.Sender, chatMessage.Receiver },
-                };
-                _chats.Add(newChat);
-                chat = newChat;
+            DirectChat directChat;
 
-            }
+            directChat = await GetChat(chatMessage.ChatId.Value);
             chatMessage.Id = Guid.NewGuid();
 
-            await AddMessageToChat(chatMessage, chat);
+
+            await AddMessageToChat(chatMessage, directChat);
 
             _logger.LogInformation("Added {msg}", chatMessage);
-
+            return directChat;
         }
 
-        private Task AddMessageToChat(ChatMessage chatMessage, Chat chat)
+        public Task<DirectChat?> Create(DirectChat chat)
         {
-            chat.Messages.Add(chatMessage);
+            chat.Id = Guid.NewGuid();
+            chat.Messages = new List<ChatMessage>();
+            _chats.Add(chat);
+            _logger.LogInformation("Created a new chat between {sender} and {receiver}", chat.Members[0], chat.Members[1]);
+            return Task.FromResult(chat)!;
+        }
+
+        private Task AddMessageToChat(ChatMessage chatMessage, DirectChat directChat)
+        {
+            directChat.Messages.Add(chatMessage);
             return Task.CompletedTask;
         }
 
-        public async Task Delete(ChatMessage chatMessage)
+        public async Task Delete(Guid chatId, ChatMessage chatMessage)
         {
-            var chat = await FindChat(chatMessage);
+            var chat = await GetChat(chatId);
             if (chat != null)
             {
                 var chatToDelete = FindChatMessage(chatMessage, chat);
@@ -55,15 +57,15 @@ namespace Volt.Contexts
                 }
                 else
                 {
-                    _logger.LogInformation("Couldn't find corresponding chat for {chatMessage}", chatMessage);
+                    _logger.LogInformation("Couldn't find corresponding directChat for {chatMessage}", chatMessage);
                 }
             }
 
         }
 
-        public async Task Update(ChatMessage chatMessage)
+        public async Task Update(Guid chatId, ChatMessage chatMessage)
         {
-            var chat = await FindChat(chatMessage);
+            var chat = await GetChat(chatId);
             if (chat != null)
             {
                 var chatToUpdate = FindChatMessage(chatMessage, chat);
@@ -74,39 +76,40 @@ namespace Volt.Contexts
                 }
                 else
                 {
-                    _logger.LogInformation("Couldn't find corresponding chat for {chatMessage}", chatMessage);
+                    _logger.LogInformation("Couldn't find corresponding directChat for {chatMessage}", chatMessage);
                 }
             }
         }
 
-        public Task<Chat?> GetChat(List<Account> members)
+        public Task<DirectChat?> GetChat(List<Account> members)
         {
             var remainingChats = _chats;
             foreach (var relevantMember in members)
             {
                 if (remainingChats.Any())
                 {
-                    remainingChats = remainingChats.Where(chat => chat.Members.Where(member => member.Id.Equals(relevantMember.Id)) != null).ToList();
+                    remainingChats = remainingChats.Where(chat => chat.Members.Any(member => member.Id == relevantMember.Id)).ToList();
                 }
             }
 
             return Task.FromResult(remainingChats.FirstOrDefault());
         }
 
-        public Task<List<Chat>> GetUserChats(Guid account)
+        public Task<DirectChat?> GetChat(Guid chatId)
+        {
+            return Task.FromResult(_chats.FirstOrDefault(chat => chat.Id == chatId));
+        }
+
+        public Task<List<DirectChat>> GetUserChats(Guid account)
         {
             var foundChats = _chats.Where(chat => chat.Members.Any(member => member.Id == account)).ToList();
             return Task.FromResult(foundChats);
         }
 
-        private async Task<Chat?> FindChat(ChatMessage chatMessage)
-        {
-            return await GetChat(new List<Account>() { chatMessage.Receiver, chatMessage.Sender });
-        }
 
-        private ChatMessage? FindChatMessage(ChatMessage chatMessage, Chat chat)
+        private ChatMessage? FindChatMessage(ChatMessage chatMessage, DirectChat directChat)
         {
-            return chat.Messages.Where(message => message.Id == chatMessage.Id)?.First();
+            return directChat.Messages.Where(message => message.Id == chatMessage.Id)?.First();
         }
     }
 }
