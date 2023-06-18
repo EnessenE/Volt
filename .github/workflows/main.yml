@@ -28,7 +28,7 @@ jobs:
     - name: Build and push volt
       uses: docker/build-push-action@v2
       with:
-        context: .
+        context: Volt/
         file: Volt/Dockerfile 
         pull: true
         push: true
