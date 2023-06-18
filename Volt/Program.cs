@@ -37,7 +37,7 @@ namespace Volt
                         policy.WithOrigins("http://localhost:4200",
                             "https://volt.reasulus.nl")
                             .AllowAnyHeader()
-                            .AllowAnyMethod().;
+                            .AllowAnyMethod();
                     });
             });
 
