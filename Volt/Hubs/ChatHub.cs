@@ -1,11 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using Volt.Interfaces;
 using Volt.Models;
-using System.Reflection;
 
 namespace Volt.Hubs
 {
@@ -22,6 +21,43 @@ namespace Volt.Hubs
             _accountContext = accountContext;
             _logger = logger;
         }
+
+
+        public override async Task OnConnectedAsync()
+        {
+            string connectionId = Context.ConnectionId;
+
+            var user = GetCurrentUser();
+            _logger.LogInformation("{acc} has connected", user);
+            if (user.Connections == null)
+            {
+                user.Connections = new ConcurrentDictionary<string, ConnectionData>();
+            }
+            lock (user.Connections)
+            {
+                user.Connections.TryAdd(connectionId, new ConnectionData());
+            }
+
+            await base.OnConnectedAsync();
+        }
+
+        public override Task OnDisconnectedAsync(Exception? exception)
+        {
+
+            var user = GetCurrentUser();
+            _logger.LogInformation("{acc} has gracefully disconnected", user);
+
+            string connectionId = Context.ConnectionId;
+
+            lock (user.Connections)
+            {
+
+                user.Connections.TryRemove(connectionId, out _);
+            }
+
+            return base.OnDisconnectedAsync(exception);
+        }
+
 
         public async Task<DirectChat?> SendDirectChat(ChatMessage message)
         {
@@ -49,8 +85,7 @@ namespace Volt.Hubs
 
                 await _chatContext.Save(message);
 
-                //TODO: dont send all chatmessages in this
-                Task.Run(async () => await NotifyAllRelevantParties(directChat, message));
+                await NotifyAllRelevantParties(directChat, message);
                 return directChat;
             }
             else
@@ -63,7 +98,18 @@ namespace Volt.Hubs
 
         private async Task NotifyAllRelevantParties(DirectChat directChat, ChatMessage message)
         {
-            await Clients.All.SendAsync("ReceiveChatMessage", directChat, message);
+            foreach (var member in directChat.Members)
+            {
+                foreach (var userConnection in member.Connections)
+                {
+                    var client = Clients.Client(userConnection.Key);
+                    _logger.LogInformation("Notifying {member} - {con}", member, userConnection.Key);
+                    Task.Run(async () =>
+                    {
+                        await client.SendAsync("ReceiveChatMessage", message);
+                    });
+                }
+            }
 
         }
 
