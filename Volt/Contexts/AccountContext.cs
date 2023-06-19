@@ -15,14 +15,24 @@ namespace Volt.Contexts
                 Discriminator = 1,
                 Id = Guid.NewGuid(),
                 Username = "Steph",
-                Password = "steph"
+                Password = "steph",
+                SecuredKey = "???"
             },
             new Account()
             {
                 Discriminator = 916,
                 Id = Guid.NewGuid(),
                 Username = "Enes",
-                Password = "enes"
+                Password = "enes",
+                SecuredKey = "???"
+            },
+            new Account()
+            {
+                Discriminator = 123,
+                Id = Guid.NewGuid(),
+                Username = "Iris",
+                Password = "iris",
+                SecuredKey = "???"
             }
         };
 

@@ -100,14 +100,19 @@ namespace Volt.Hubs
         {
             foreach (var member in directChat.Members)
             {
-                foreach (var userConnection in member.Connections)
+                if (member.Connections != null)
                 {
-                    var client = Clients.Client(userConnection.Key);
-                    _logger.LogInformation("Notifying {member} - {con}", member, userConnection.Key);
-                    Task.Run(async () =>
+                    foreach (var userConnection in member.Connections)
                     {
-                        await client.SendAsync("ReceiveChatMessage", message);
-                    });
+                        var client = Clients.Client(userConnection.Key);
+                        _logger.LogInformation("Notifying {member} - {con}", member, userConnection.Key);
+                        Task.Run(async () => { await client.SendAsync("ReceiveChatMessage", message); });
+                    }
+                }
+
+                else
+                {
+                    _logger.LogInformation("{acc} is currently not connected", member);
                 }
             }
 
