@@ -98,6 +98,7 @@ namespace Volt
 
             builder.Services.AddSingleton<IAccountContext, AccountContext>();
             builder.Services.AddSingleton<IChatContext, ChatContext>();
+            builder.Services.AddSingleton<ConnectionManager>();
 
             builder.Services.AddSignalR();
 

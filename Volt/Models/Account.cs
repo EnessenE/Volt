@@ -16,6 +16,8 @@ public class Account
     /// </summary>
     public string SecuredKey { get; set; }
 
+    public bool IsSystem { get; set; }
+
     public override string ToString()
     {
         return $"{Id} - {Username}#{Discriminator}";

@@ -12,6 +12,13 @@ namespace Volt.Contexts
         {
             new Account()
             {
+                Id = Guid.NewGuid(),
+                IsSystem = true,
+                Discriminator = 1,
+                Username = "Wora"
+            },
+            new Account()
+            {
                 Discriminator = 1,
                 Id = Guid.NewGuid(),
                 Username = "Steph",

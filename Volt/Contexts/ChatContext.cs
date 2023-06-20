@@ -1,4 +1,7 @@
 ﻿using System.Reflection;
+using Microsoft.AspNetCore.Identity;
+using Volt.Helpers;
+using Volt.Hubs;
 using Volt.Interfaces;
 using Volt.Models;
 
@@ -8,10 +11,12 @@ namespace Volt.Contexts
     {
         private readonly List<DirectChat> _chats;
         private readonly ILogger<ChatContext> _logger;
+        private ConnectionManager _connectionManager;
 
-        public ChatContext(ILogger<ChatContext> logger)
+        public ChatContext(ILogger<ChatContext> logger, ConnectionManager connectionManager)
         {
             _logger = logger;
+            _connectionManager = connectionManager;
             _chats = new List<DirectChat>();
         }
 
@@ -34,7 +39,10 @@ namespace Volt.Contexts
             chat.Id = Guid.NewGuid();
             chat.Messages = new List<ChatMessage>();
             _chats.Add(chat);
-            _logger.LogInformation("Created a new chat between {sender} and {receiver}", chat.Members[0], chat.Members[1]);
+            _logger.LogInformation("Created a new chat between {sender} and {receiver}", chat.Members[0],
+                chat.Members[1]);
+            chat.EncryptionKey = PasswordGenerator.GenerateRandomPassword(new PasswordOptions() { RequiredLength = 100 });
+ 
             return Task.FromResult(chat)!;
         }
 
