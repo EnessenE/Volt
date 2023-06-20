@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Volt.Helpers;
 using Volt.Hubs;
 using Volt.Interfaces;
@@ -41,6 +40,7 @@ namespace Volt.Contexts
             _chats.Add(chat);
             _logger.LogInformation("Created a new chat between {sender} and {receiver}", chat.Members[0],
                 chat.Members[1]);
+
             chat.EncryptionKey = PasswordGenerator.GenerateRandomPassword(new PasswordOptions() { RequiredLength = 100 });
  
             return Task.FromResult(chat)!;

@@ -10,6 +10,7 @@ public class Account
     public int Discriminator { get; set; }
     public string Password { get; set; }
     public ConcurrentDictionary<string, ConnectionData> Connections { get; set; }
+    public ConcurrentDictionary<string, ConnectionData> VoiceConnections { get; set; }
 
     /// <summary>
     /// Secured by by your password!

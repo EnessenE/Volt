@@ -117,6 +117,7 @@ namespace Volt
             };
 
             app.MapHub<ChatHub>("/hubs/v1/chat");
+            app.MapHub<VoiceHub>("/hubs/v1/voice");
             app.UseWebSockets(webSocketOptions);
 
             app.UseHttpsRedirection();
