@@ -1,5 +1,6 @@
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer; 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -94,6 +95,10 @@ namespace Volt
                     }
                 };
 
+            });
+
+            builder.Services.Configure<HubOptions>(options =>{
+                options.MaximumReceiveMessageSize = 1 * 1024 * 1024;
             });
 
             builder.Services.AddSingleton<IAccountContext, AccountContext>();

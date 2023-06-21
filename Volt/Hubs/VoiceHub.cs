@@ -21,26 +21,15 @@ namespace Volt.Hubs
         }
 
 
-        public async Task SendAudio(string[] base64Array)
+        public async Task SendAudioData(Dictionary<int, float> audioData)
         {
-            _logger.LogInformation("{acc} is talking: {size}!", GetCurrentUser(), base64Array.Length);
+            _logger.LogInformation("{acc} is talking: {size}!", GetCurrentUser(), audioData.Count);
 
-            try
-            {
-                foreach (string base64 in base64Array)
-                {
-                    // Convert each base64 string back to a Blob or perform any other required operations
-                    byte[] bytes = Convert.FromBase64String(base64);
-                    // ... do something with the bytes ...
-                    // Broadcast the audio to all connected clients except the sender
-                }
-                await Clients.Others.SendAsync("ReceiveAudio", base64Array);
-            }
-            catch (FormatException)
-            {
-                _logger.LogError("Failed to decode it :(");
-                // Handle invalid base64 data
-            }
+            // Process the audio data as per your requirements
+            // For example, you can save it to a database, perform analysis, etc.
+
+            // Broadcast the audio data to all other clients except the sender
+            await Clients.All.SendAsync("ReceiveAudioData", audioData.Values);
         }
 
         public override async Task OnConnectedAsync()
