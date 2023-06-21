@@ -29,7 +29,7 @@ namespace Volt.Hubs
             // For example, you can save it to a database, perform analysis, etc.
 
             // Broadcast the audio data to all other clients except the sender
-            await Clients.All.SendAsync("ReceiveAudioData", audioData.Values);
+            await Clients.Others.SendAsync("ReceiveAudioData", audioData.Values);
         }
 
         public override async Task OnConnectedAsync()
