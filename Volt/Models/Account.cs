@@ -9,8 +9,8 @@ public class Account
     public string Username { get; set; }
     public int Discriminator { get; set; }
     public string Password { get; set; }
-    public ConcurrentDictionary<string, ConnectionData> Connections { get; set; }
-    public ConcurrentDictionary<string, ConnectionData> VoiceConnections { get; set; }
+    public ConcurrentDictionary<string, ConnectionData> Connections { get; set; } = new ConcurrentDictionary<string, ConnectionData>();
+    public ConcurrentDictionary<string, ConnectionData> VoiceConnections { get; set; } = new ConcurrentDictionary<string, ConnectionData>();
 
     /// <summary>
     /// Secured by by your password!

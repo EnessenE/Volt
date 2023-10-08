@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Volt.Interfaces;
 using Volt.Models;
 using Hub = Microsoft.AspNetCore.SignalR.Hub;
+using Volt.Exceptions;
 
 namespace Volt.Hubs
 {
@@ -199,7 +200,7 @@ namespace Volt.Hubs
                 return foundAccount;
             }
             //TODO: replace with a real exception
-            throw new InvalidOperationException("Account not found");
+            throw new VoltChatException("Account not found");
         }
     }
 
