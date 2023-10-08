@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Volt.Exceptions;
 using Volt.Interfaces;
 using Volt.Models;
 
@@ -34,7 +35,7 @@ namespace Volt.Controllers
                 return foundAccount;
             }
             //TODO: replace with a real exception
-            throw new InvalidOperationException("Account not found");
+            throw new VoltAuthenticationException("Account not found");
         }
     }
 }
