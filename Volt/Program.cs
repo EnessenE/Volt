@@ -42,6 +42,61 @@ namespace Volt
                     });
             });
 
+            AddSwagger(builder);
+            AddAuthentication(builder);
+
+            builder.Services.Configure<HubOptions>(options =>
+            {
+                options.MaximumReceiveMessageSize = 1 * 1024 * 1024;
+            });
+            AddServices(builder);
+
+            builder.Services.AddSignalR();
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            AddWebsocketItems(app);
+
+            app.UseHttpsRedirection();
+
+            app.UseCors(corsName);
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseSerilogRequestLogging();
+            app.MapControllers();
+
+            app.Run();
+        }
+
+        private static void AddWebsocketItems(WebApplication app)
+        {
+            var webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromMinutes(2)
+            };
+
+            app.MapHub<ChatHub>("/hubs/v1/chat");
+            app.MapHub<VoiceHub>("/hubs/v1/voice");
+            app.UseWebSockets(webSocketOptions);
+        }
+
+        private static void AddServices(WebApplicationBuilder builder)
+        {
+            builder.Services.AddSingleton<IAccountContext, AccountContext>();
+            builder.Services.AddSingleton<IChatContext, ChatContext>();
+            builder.Services.AddSingleton<ConnectionManager>();
+        }
+
+        private static void AddSwagger(WebApplicationBuilder builder)
+        {
             builder.Services.AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -65,8 +120,12 @@ namespace Volt
                     }
                 });
             });
+        }
 
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+        private static void AddAuthentication(WebApplicationBuilder builder)
+        {
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -96,45 +155,6 @@ namespace Volt
                 };
 
             });
-
-            builder.Services.Configure<HubOptions>(options =>{
-                options.MaximumReceiveMessageSize = 1 * 1024 * 1024;
-            });
-
-            builder.Services.AddSingleton<IAccountContext, AccountContext>();
-            builder.Services.AddSingleton<IChatContext, ChatContext>();
-            builder.Services.AddSingleton<ConnectionManager>();
-
-            builder.Services.AddSignalR();
-
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            var webSocketOptions = new WebSocketOptions
-            {
-                KeepAliveInterval = TimeSpan.FromMinutes(2)
-            };
-
-            app.MapHub<ChatHub>("/hubs/v1/chat");
-            app.MapHub<VoiceHub>("/hubs/v1/voice");
-            app.UseWebSockets(webSocketOptions);
-
-            app.UseHttpsRedirection();
-
-            app.UseCors(corsName);
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            app.UseSerilogRequestLogging();
-            app.MapControllers();
-
-            app.Run();
         }
     }
 }
